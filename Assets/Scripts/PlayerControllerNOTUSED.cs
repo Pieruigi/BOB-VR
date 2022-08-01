@@ -4,13 +4,14 @@ using UnityEngine;
 
 namespace Bob
 {
-    public class PlayerController : MonoBehaviour
+    public class PlayerControllerNOTUSED : MonoBehaviour
     {
         #region private methods
 
         Vector3 targetVelocity;
-        CharacterController cc;
-        
+        Rigidbody rb;
+        BoxCollider coll;
+
         
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
@@ -28,8 +29,8 @@ namespace Bob
         #region native methods
         private void Awake()
         {
-            cc = GetComponent<CharacterController>();
-            
+            rb = GetComponent<Rigidbody>();
+            coll = GetComponent<BoxCollider>();
         }
 
         // Start is called before the first frame update
@@ -74,8 +75,8 @@ namespace Bob
 
             }
             // Drag => v = v * ( 1 - drag * dt )
+            
 
-            cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
 
         }
 
@@ -84,7 +85,7 @@ namespace Bob
 
 
             // ySpeed is only applied if the bob is not grounded
-            //rb.velocity = targetVelocity + Vector3.up * ySpeed;
+            rb.velocity = targetVelocity + Vector3.up * ySpeed;
             
         }
 
@@ -98,14 +99,15 @@ namespace Bob
         /// <returns></returns>
         public bool IsGrounded()
         {
-            Vector3 point0 = transform.position + cc.center + Vector3.up * ( cc.height / 2f - cc.radius);
-            Vector3 point1 = transform.position + cc.center + Vector3.up * (cc.radius - cc.height / 2f);
+            // Overlap the box collider
+            Vector3 center = transform.position + coll.center;
+            Vector3 halfExtents = new Vector3(coll.size.x / 2f, coll.size.y / 2f, coll.size.z / 2f);
             LayerMask mask = LayerMask.GetMask(new string[] { Layers.Ground });
-            Collider[] colls = Physics.OverlapCapsule(point0, point1, cc.radius + cc.skinWidth, mask);
-            if (colls == null || colls.Length == 0)
-                return false;
-            else 
+            Collider[] ret = Physics.OverlapBox(center, halfExtents, transform.rotation, mask);
+            if (ret != null && ret.Length > 0)
                 return true;
+            else
+                return false;
         }
         #endregion
 
