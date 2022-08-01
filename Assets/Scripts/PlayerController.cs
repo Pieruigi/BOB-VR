@@ -13,6 +13,24 @@ namespace Bob
         BoxCollider coll;
 
         bool isGrounded; // Cached value
+
+        // Movement fields
+        /// <summary>
+        /// Velocity applied along bob local axis
+        /// X: along right axis
+        /// Y: along up axis ( not used )
+        /// Z: along forward axis
+        /// </summary>
+        Vector3 localVelocity; // The bob velocity computed along its right and forward axis
+
+        /// <summary>
+        /// X: lateral friction
+        /// Y: not used
+        /// Z: frontal friction
+        /// </summary>
+        [SerializeField]
+        Vector3 friction;
+        
         #endregion
 
         #region native methods
@@ -34,9 +52,19 @@ namespace Bob
             // Cache the isGrounded value
             isGrounded = IsGrounded();
 
-            
-            // Drag => v = v * ( 1 - drag * dt )
 
+            if (isGrounded)
+            {
+                // Compute velocity
+                // We need the component of the gravity along the slope
+                Vector3 groundNormal = GetGroundNormal();
+
+            }
+                        // Drag => v = v * ( 1 - drag * dt )
+
+
+            // Apply friction to local velocity
+            ApplyFriction();
         }
 
         private void FixedUpdate()
@@ -64,6 +92,33 @@ namespace Bob
                 return true;
             else
                 return false;
+        }
+        #endregion
+
+        #region private methods
+        void ApplyFriction()
+        {
+            // No friction if you are flying
+            if (!isGrounded)
+                return;
+
+            // Frontal friction
+            localVelocity.z -= friction.z * Time.deltaTime;
+            // Lateral friction+
+            localVelocity.x -= friction.x * Time.deltaTime;
+        }
+
+        Vector3 GetGroundNormal()
+        {
+            Vector3 ret = Vector3.zero;
+            LayerMask mask = LayerMask.GetMask(new string[] { Layers.Ground });
+            RaycastHit hitInfo;
+            if(Physics.Raycast(transform.position, Vector3.down, out hitInfo, 10, mask))
+            {
+                ret = hitInfo.normal;
+            }
+
+            return ret;
         }
         #endregion
     }

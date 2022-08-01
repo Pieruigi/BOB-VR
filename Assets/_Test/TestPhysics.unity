@@ -317,6 +317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc8897ff1366d824382be726a59df682, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  friction: {x: 2, y: 0, z: 0.3}
 --- !u!65 &689870063
 BoxCollider:
   m_ObjectHideFlags: 0
