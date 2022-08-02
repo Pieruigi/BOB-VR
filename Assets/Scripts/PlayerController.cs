@@ -21,6 +21,8 @@ namespace Bob
         
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
+        float overturnAngle = 0;
+        float overturnDotThreshold = 0.8f;
 
         [SerializeField]
         float drag = 0.5f;
@@ -184,7 +186,7 @@ namespace Bob
             float dragDelta = 1 - drag * Time.deltaTime;
             targetVelocity *= dragDelta;
             ySpeed *= dragDelta;
-
+            
             cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
         }
 
@@ -192,6 +194,8 @@ namespace Bob
 
         void AdjustRotation()
         {
+
+
             if (!isGrounded)
             {
                 // Use head to do move center of mass
@@ -205,12 +209,24 @@ namespace Bob
                 Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
                 Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
                 float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
-                float threshold = 0.8f;
-                float slopeFactor = Vector3.Dot(groundNormal, Vector3.up);
-                float lAngle = 0;
-                if (Mathf.Abs(sign) > threshold)
-                    lAngle = sign * 5;
-                targetNormal = Quaternion.AngleAxis(lAngle, transform.forward) * groundNormal;
+                // Get the center of mass
+                
+                Vector3 comOnUp = Vector3.ProjectOnPlane(transform.position - head.position, Vector3.up);
+
+                // Sign < 0 means we are moving our head in the opposite direction to avoid overturn
+                float signCom = Vector3.Dot(velProj.normalized, comOnUp.normalized);
+
+                Debug.Log("tmp:" + signCom);
+                if (Mathf.Abs(sign) > overturnDotThreshold)
+                {
+                    overturnAngle += sign * 20 * Time.deltaTime;
+                }
+                else
+                {
+                    overturnAngle = Mathf.MoveTowards(overturnAngle, 0, 100 * Time.deltaTime);
+                }
+               
+                targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
 
                 // Compute pitch angle
                 float pitchAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.right);
@@ -271,6 +287,8 @@ namespace Bob
 
 
         }
+
+       
 
         void CheckInput()
         {
