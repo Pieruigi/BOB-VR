@@ -15,6 +15,9 @@ namespace Bob
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
 
+        [SerializeField]
+        float directionChangeSpeed = 5;
+
         /// <summary>
         /// X: lateral friction
         /// Y: not used
@@ -41,35 +44,49 @@ namespace Bob
         // Update is called once per frame
         void Update()
         {
-            // Cache the isGrounded value
+            // isGrounded value is cached
             isGrounded = IsGrounded();
 
-
+            //
+            // Compute velocity 
+            //
             if (isGrounded)
             {
                 ySpeed = 0;
 
-                // To compute the velocity we need to project the gravity along the slope
+                // Get the ground plane ( given by its normal )
                 Vector3 groundNormal = GetGroundNormal(); // The ground normal 
 
-                // Project all the vectors we need on the ground plane
+                // Project the bob fwd and rgt axis on the ground plane
                 Vector3 fwdOnGround = Vector3.ProjectOnPlane(transform.forward, groundNormal).normalized;
                 Vector3 rgtOnGround = Vector3.ProjectOnPlane(transform.right, groundNormal).normalized;
 
-                // We split the gravity acceleration into two different components along the fwd and right axis
+                // Get the acceleration along the bob forward axis: this acceleration depends on the 
+                // gravity projected on the slope
                 Vector3 fAcc = Vector3.Project(Physics.gravity, fwdOnGround);
-                Vector3 rAcc = Vector3.Project(Physics.gravity, rgtOnGround);
-                //fAcc = rAcc = Vector3.zero;
-
+                // The computed right acceleration should be zero unless we want the bob to slightly
+                // slip on the strongest slopes
+                Vector3 rAcc = Vector3.zero; // Vector3.Project(Physics.gravity, rgtOnGround);
+              
+                // Now we adjust the target velocity depending on the direction we are moving along the slope.
+                // We adjust the direction first: the new direction is given by the bob fwd projected on 
+                // the ground
+                Vector3 newDirection = Vector3.MoveTowards(targetVelocity.normalized, fwdOnGround, directionChangeSpeed * Time.deltaTime);
+                // Now we adjust the speed which slightly move to zero 
+                float decelFactor = Vector3.Dot(targetVelocity.normalized, transform.right) * friction.x;
+                float newMagnitude = Mathf.MoveTowards(targetVelocity.magnitude, 0, decelFactor * Time.deltaTime);
+                // Adjust the target velocity
+                targetVelocity = newMagnitude * newDirection;
+                
                 Debug.Log("Ground.Normal:" + groundNormal);
                 Debug.Log("fAcc:" + fAcc);
-
+                // Apply acceleration
                 targetVelocity += (fAcc + rAcc) * Time.deltaTime;
                 
             }
             else
             {
-                // Fall down
+                // Fall speed
                 ySpeed += Physics.gravity.y * Time.deltaTime;
 
             }
@@ -77,6 +94,17 @@ namespace Bob
 
             cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
 
+
+
+            // Test input check
+            int dir = 0;
+            if (Input.GetKey(KeyCode.A))
+                dir = -1;
+            if (Input.GetKey(KeyCode.D))
+                dir = 1;
+            
+            transform.Rotate(Vector3.up, 80 * Time.deltaTime * dir);
+            
         }
 
         private void FixedUpdate()
