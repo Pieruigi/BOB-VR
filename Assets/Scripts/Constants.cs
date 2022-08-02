@@ -10,4 +10,8 @@ namespace Bob
         public static readonly string Ground = "Ground";
     }
 
+    public class Tags
+    {
+        public static readonly string Player = "Player";
+    }
 }

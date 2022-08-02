@@ -67,13 +67,16 @@ namespace Bob
                 // The computed right acceleration should be zero unless we want the bob to slightly
                 // slip on the strongest slopes
                 Vector3 rAcc = Vector3.zero; // Vector3.Project(Physics.gravity, rgtOnGround);
-              
+
                 // Now we adjust the target velocity depending on the direction we are moving along the slope.
                 // We adjust the direction first: the new direction is given by the bob fwd projected on 
                 // the ground
+                // Adjust the target velocity after jumping
+                targetVelocity = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
                 Vector3 newDirection = Vector3.MoveTowards(targetVelocity.normalized, fwdOnGround, directionChangeSpeed * Time.deltaTime);
                 // Now we adjust the speed which slightly move to zero 
                 float decelFactor = Vector3.Dot(targetVelocity.normalized, transform.right) * friction.x;
+                decelFactor = Mathf.Abs(decelFactor);
                 float newMagnitude = Mathf.MoveTowards(targetVelocity.magnitude, 0, decelFactor * Time.deltaTime);
                 // Adjust the target velocity
                 targetVelocity = newMagnitude * newDirection;
