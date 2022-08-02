@@ -8,14 +8,22 @@ namespace Bob.Test
     public class TestUI : MonoBehaviour
     {
         [SerializeField]
-        TMP_Text speed;
+        TMP_Text targetSpeed;
+        
+        [SerializeField]
+        Transform targetVelocityH;
+
+        [SerializeField]
+        Transform targetvelocityV;
 
         CharacterController characterController;
+        PlayerController playerController;
 
         // Start is called before the first frame update
         void Start()
         {
             characterController = GameObject.FindObjectOfType<CharacterController>();
+            playerController = GameObject.FindObjectOfType<PlayerController>();
         }
 
         // Update is called once per frame
@@ -26,7 +34,8 @@ namespace Bob.Test
 
         private void LateUpdate()
         {
-            speed.text = characterController.velocity.magnitude.ToString();   
+            targetSpeed.text = playerController.TargetVelocity.magnitude.ToString();   
+
         }
     }
 
