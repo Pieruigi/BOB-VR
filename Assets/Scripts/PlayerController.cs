@@ -85,12 +85,12 @@ namespace Bob
             //
             // Align to ground
             //
-            AlignToGround();
+            AdjustRotation();
 
             //
             // Roll ( when grounded )
             //
-            Roll();
+            //Roll();
             
         }
 
@@ -188,23 +188,88 @@ namespace Bob
             cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
         }
 
-        void Roll()
+
+
+        void AdjustRotation()
         {
             if (!isGrounded)
-                return;
+            {
+                // Use head to do move center of mass
+            }
+            else
+            {
+                Vector3 groundNormal = GetGroundNormal();
+                float speed = 100;
+                Vector3 targetNormal = groundNormal;
+                // Adjust the roll angle depending on the lateral speed
+                Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
+                Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
+                float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
+                float threshold = 0.8f;
+                float slopeFactor = Vector3.Dot(groundNormal, Vector3.up);
+                float lAngle = 0;
+                if (Mathf.Abs(sign) > threshold)
+                    lAngle = sign * 5;
+                targetNormal = Quaternion.AngleAxis(lAngle, transform.forward) * groundNormal;
+
+                // Compute pitch angle
+                float pitchAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.right);
+                pitchAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.x, transform.eulerAngles.x + pitchAngle, speed * Time.deltaTime);
+
+                // Compute roll angle
+                
+                //targetAngle = Quaternion.Euler(0, 0, 20) * targetAngle;
+                float rollAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.forward);
+                
+                rollAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.z, transform.eulerAngles.z + rollAngle, speed * Time.deltaTime);
+                
+
+                Vector3 eulers = transform.eulerAngles;
+                eulers.x = pitchAngle;
+                eulers.z = rollAngle;
+                transform.eulerAngles = eulers;
+
+                //transform.Rotate(Vector3.forward, 20, Space.Self);
+
+                
+               
+            }    
+
+            
         }
 
-        void AlignToGround()
+        void AdjustRotation2()
         {
             if (!isGrounded)
-                return;
+            {
+                // Use head to do move center of mass
+            }
+            else
+            {
+                Vector3 groundNormal = GetGroundNormal();
+                float speed = 60;
 
-            Vector3 groundNormal = GetGroundNormal();
-            
-            float pitchAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.right);
-            transform.Rotate(Vector3.right, pitchAngle, Space.Self);
-            float rollAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.forward);
-            transform.Rotate(Vector3.forward, rollAngle, Space.Self);
+                // Compute pitch angle
+                float pitchAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.right);
+                pitchAngle = Mathf.MoveTowardsAngle(0, pitchAngle, speed * Time.deltaTime);
+                transform.Rotate(Vector3.right, pitchAngle, Space.Self);
+
+                // Compute roll angle
+                float rollAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.forward);
+                // Adjust the roll angle depending on the lateral speed
+                Vector3 lSpeed = Vector3.Project(cc.velocity, transform.right);
+                float sign = -Vector3.Dot(lSpeed, transform.right);
+                rollAngle += Mathf.Lerp(0, sign * 20, lSpeed.magnitude / 20f);
+                rollAngle = Mathf.MoveTowardsAngle(0, rollAngle, speed * Time.deltaTime);
+                transform.Rotate(Vector3.forward, rollAngle, Space.Self);
+
+                //Vector3 eulers = transform.eulerAngles;
+                //eulers.x = pitchAngle;
+                //eulers.z = rollAngle;
+                //transform.eulerAngles = eulers;
+            }
+
+
         }
 
         void CheckInput()
