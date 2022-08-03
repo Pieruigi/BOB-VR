@@ -43,7 +43,17 @@ namespace Bob
         [SerializeField]
         float brakeForceMax = .5f;
 
+        [SerializeField]
+        float brakeLength = 0.5f;
+
+        [SerializeField]
+        Transform leftBrakePivot;
+
+        [SerializeField]
+        Transform rightBrakePivot;
+
         float leftBrake, rightBrake = 0; // 0: released; 1: maximum braking force
+
 
         [SerializeField]
         Transform head;
@@ -84,15 +94,11 @@ namespace Bob
             Move();
 
             //
-            // Align to ground
+            // Roll and pitch
             //
-            AdjustRotation();
+            RollAndPitch();
 
-            //
-            // Roll ( when grounded )
-            //
-            //Roll();
-            
+                
         }
 
 
@@ -137,7 +143,32 @@ namespace Bob
         {
             if (isGrounded)
             {
-                ySpeed = 0;
+                //
+                // Apply brakes
+                //
+                // Raycast from both left and right brakes
+                RaycastHit hitInfo;
+                float leftBrakeRatio = 0;
+                float rightBrakeRatio = 0;
+                if(Physics.Raycast(new Ray(leftBrakePivot.position, -leftBrakePivot.forward), out hitInfo, brakeLength, LayerMask.GetMask(new string[] { Layers.Ground })))
+                {
+                    float dist = Vector3.Distance(leftBrakePivot.position, hitInfo.point);
+                    dist = brakeLength - dist;
+                    leftBrakeRatio = dist / brakeLength;
+                }
+                if (Physics.Raycast(new Ray(rightBrakePivot.position, -rightBrakePivot.forward), out hitInfo, brakeLength, LayerMask.GetMask(new string[] { Layers.Ground })))
+                {
+                    float dist = Vector3.Distance(rightBrakePivot.position, hitInfo.point);
+                    dist = brakeLength - dist;
+                    rightBrakeRatio = dist / brakeLength;
+                }
+                // Rotate accordingly to the braking force
+                transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
+
+                // 
+                // Move the bob
+                //
+                ySpeed = 0; // Reset fall speed when grounded
 
                 // Get the ground plane ( given by its normal )
                 Vector3 groundNormal = GetGroundNormal(); // The ground normal 
@@ -162,7 +193,8 @@ namespace Bob
                 // Now we adjust the speed which slightly move to zero 
                 float decelFactor = Vector3.Dot(targetVelocity.normalized, transform.right) * friction.x;
                 // Adding braking factor
-                decelFactor += (leftBrake + rightBrake) * brakeForceMax;
+                //decelFactor += (leftBrake + rightBrake) * brakeForceMax;
+                decelFactor += ( leftBrakeRatio + rightBrakeRatio ) * brakeForceMax;
                 decelFactor = Mathf.Abs(decelFactor);
                 // Compute new magnitude
                 float newMagnitude = Mathf.MoveTowards(targetVelocity.magnitude, 0, decelFactor * Time.deltaTime);
@@ -191,7 +223,7 @@ namespace Bob
 
 
 
-        void AdjustRotation()
+        void RollAndPitch()
         {
 
 
@@ -220,7 +252,7 @@ namespace Bob
 
                 // We must check the position of the head to determine the overturn angle
                 float baseHalfSize = cc.radius;
-                float headDist = com.magnitude; // The distance the head fall 
+                float headDist = com.magnitude; // The distance the head falls in the UP plane 
                 float headDir = Mathf.Sign(signCom); // <0 means against the slope to avoid overturn
                 Debug.Log("HeadFallDist:" + headDist);
                 // The threshold depends on the position of the head: the more the head is against the slope
@@ -265,39 +297,6 @@ namespace Bob
             
         }
 
-        void AdjustRotation2()
-        {
-            if (!isGrounded)
-            {
-                // Use head to do move center of mass
-            }
-            else
-            {
-                Vector3 groundNormal = GetGroundNormal();
-                float speed = 60;
-
-                // Compute pitch angle
-                float pitchAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.right);
-                pitchAngle = Mathf.MoveTowardsAngle(0, pitchAngle, speed * Time.deltaTime);
-                transform.Rotate(Vector3.right, pitchAngle, Space.Self);
-
-                // Compute roll angle
-                float rollAngle = Vector3.SignedAngle(transform.up, groundNormal, transform.forward);
-                // Adjust the roll angle depending on the lateral speed
-                Vector3 lSpeed = Vector3.Project(cc.velocity, transform.right);
-                float sign = -Vector3.Dot(lSpeed, transform.right);
-                rollAngle += Mathf.Lerp(0, sign * 20, lSpeed.magnitude / 20f);
-                rollAngle = Mathf.MoveTowardsAngle(0, rollAngle, speed * Time.deltaTime);
-                transform.Rotate(Vector3.forward, rollAngle, Space.Self);
-
-                //Vector3 eulers = transform.eulerAngles;
-                //eulers.x = pitchAngle;
-                //eulers.z = rollAngle;
-                //transform.eulerAngles = eulers;
-            }
-
-
-        }
 
         /// <summary>
         /// Returns the bottom center of the bob ( the bottom collision )
@@ -308,6 +307,8 @@ namespace Bob
             return transform.position + cc.center - transform.up * cc.height / 2f;
         }
 
+        
+
         void CheckInput()
         {
 #if UNITY_EDITOR
@@ -316,21 +317,23 @@ namespace Bob
             {
                 // Test input check
 
-                float lBrake = 0;
-                float rBrake = 0;
-                leftBrake = rightBrake = 0;
+                
+                //leftBrake = rightBrake = 0;
+                float speed = 1;
                 if (Input.GetKey(KeyCode.A))
-                    lBrake = 1;
+                    leftBrake = Mathf.Min(1, leftBrake + speed * Time.deltaTime);
+                else
+                    leftBrake = Mathf.Max(0, leftBrake - speed * Time.deltaTime);
+                
                 if (Input.GetKey(KeyCode.D))
-                    rBrake = 1;
+                    rightBrake = Mathf.Min(1, rightBrake + speed * Time.deltaTime);
+                else
+                    rightBrake = Mathf.Max(0, rightBrake - speed * Time.deltaTime);
 
-                if (lBrake != 0)
-                    leftBrake = 1;
 
-                if (rBrake != 0)
-                    rightBrake = 1;
-
-                transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime * (rBrake - lBrake));
+                // Move brakes handles
+                leftBrakePivot.localEulerAngles = new Vector3(leftBrake * -90, 0, 0);
+                rightBrakePivot.localEulerAngles = new Vector3(rightBrake * -90, 0, 0);
             }
 #endif
         }
