@@ -22,8 +22,7 @@ namespace Bob
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
         float overturnAngle = 0;
-        float overturnDotThreshold = 0.8f;
-
+        
         [SerializeField]
         float drag = 0.5f;
 
@@ -203,27 +202,39 @@ namespace Bob
             else
             {
                 Vector3 groundNormal = GetGroundNormal();
-                float speed = 100;
+                float speed = 40;
                 Vector3 targetNormal = groundNormal;
                 // Adjust the roll angle depending on the lateral speed
                 Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
+               
                 Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
                 float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
-                // Get the center of mass
+                // Project the center of mass on the ground plane
+                Vector3 com = Vector3.ProjectOnPlane(head.position - GetBasePoint(), Vector3.up);
                 
-                Vector3 comOnUp = Vector3.ProjectOnPlane(transform.position - head.position, Vector3.up);
+                com = Vector3.Project(com, rightProj);
+                
+                // Sign < 0 means we are moving our head against the velocity ( the slope in theory ) to avoid overturn
+                float signCom = Vector3.Dot(velProj.normalized, com.normalized);
+                //Debug.Log("signCom:" + signCom);
 
-                // Sign < 0 means we are moving our head in the opposite direction to avoid overturn
-                float signCom = Vector3.Dot(velProj.normalized, comOnUp.normalized);
-
-                Debug.Log("tmp:" + signCom);
-                if (Mathf.Abs(sign) > overturnDotThreshold)
+                // We must check the position of the head to determine the overturn angle
+                float baseHalfSize = cc.radius;
+                float headDist = com.magnitude; // The distance the head fall 
+                float headDir = Mathf.Sign(signCom); // <0 means against the slope to avoid overturn
+                Debug.Log("HeadFallDist:" + headDist);
+                // The threshold depends on the position of the head: the more the head is against the slope
+                // the higher is the threshold
+                if(headDir > 0 && headDist > baseHalfSize)
+                //if (Mathf.Abs(sign) > (overturnDotThreshold - headDir * headDist / baseHalfSize * 0.1f))
                 {
-                    overturnAngle += sign * 20 * Time.deltaTime;
+                    float overturnFactor = 20;
+                    float targetAngle = overturnAngle + sign * overturnFactor;
+                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, targetAngle, 20 * Time.deltaTime);
                 }
                 else
                 {
-                    overturnAngle = Mathf.MoveTowards(overturnAngle, 0, 100 * Time.deltaTime);
+                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, 0, 40 * Time.deltaTime);
                 }
                
                 targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
@@ -288,7 +299,14 @@ namespace Bob
 
         }
 
-       
+        /// <summary>
+        /// Returns the bottom center of the bob ( the bottom collision )
+        /// </summary>
+        /// <returns></returns>
+        Vector3 GetBasePoint()
+        {
+            return transform.position + cc.center - transform.up * cc.height / 2f;
+        }
 
         void CheckInput()
         {
