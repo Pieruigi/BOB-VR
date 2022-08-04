@@ -115,7 +115,7 @@ namespace Bob
             Vector3 point0 = transform.position + cc.center + Vector3.up * ( cc.height / 2f - cc.radius);
             Vector3 point1 = transform.position + cc.center + Vector3.up * (cc.radius - cc.height / 2f);
             LayerMask mask = LayerMask.GetMask(new string[] { Layers.Ground });
-            Collider[] colls = Physics.OverlapCapsule(point0, point1, cc.radius + cc.skinWidth, mask);
+            Collider[] colls = Physics.OverlapCapsule(point0, point1, cc.radius + 2*cc.skinWidth, mask);
             if (colls == null || colls.Length == 0)
                 return false;
             else 
@@ -201,8 +201,7 @@ namespace Bob
                 // Adjust the target velocity
                 targetVelocity = newMagnitude * newDirection;
 
-                Debug.Log("Ground.Normal:" + groundNormal);
-                Debug.Log("fAcc:" + fAcc);
+               
                 // Apply acceleration
                 targetVelocity += (fAcc + rAcc) * Time.deltaTime;
 
@@ -233,6 +232,17 @@ namespace Bob
             }
             else
             {
+                
+                // Get the center of mass
+                Vector3 centerOfMass = GetCenterOfMass();
+                Debug.Log("CenterOfMass:" + centerOfMass);
+                // Compute the reaction force of the center of mass: if the center of mass projectes along the
+                // UP plane falls inside the bob then the force puts the bob down, otherwise the force applies to
+                // overturn by itslef )
+                // Project the center of mass on the horizontal plane
+                Vector3 comOnHorizontalPlane = Vector3.ProjectOnPlane(centerOfMass, Vector3.up);
+                Debug.Log("CenterOfMass.ProjectOnUP:" + comOnHorizontalPlane);
+
                 Vector3 groundNormal = GetGroundNormal();
                 float speed = 40;
                 Vector3 targetNormal = groundNormal;
@@ -242,7 +252,7 @@ namespace Bob
                 Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
                 float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
                 // Project the center of mass on the ground plane
-                Vector3 com = Vector3.ProjectOnPlane(head.position - GetBasePoint(), Vector3.up);
+                Vector3 com = Vector3.ProjectOnPlane(head.position - transform.position, Vector3.up);
                 
                 com = Vector3.Project(com, rightProj);
                 
@@ -254,7 +264,7 @@ namespace Bob
                 float baseHalfSize = cc.radius;
                 float headDist = com.magnitude; // The distance the head falls in the UP plane 
                 float headDir = Mathf.Sign(signCom); // <0 means against the slope to avoid overturn
-                Debug.Log("HeadFallDist:" + headDist);
+                
                 // The threshold depends on the position of the head: the more the head is against the slope
                 // the higher is the threshold
                 if(headDir > 0 && headDist > baseHalfSize)
@@ -269,7 +279,7 @@ namespace Bob
                     overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, 0, 40 * Time.deltaTime);
                 }
                
-                targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
+                //targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
 
                 // Compute pitch angle
                 float pitchAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.right);
@@ -297,17 +307,86 @@ namespace Bob
             
         }
 
-
-        /// <summary>
-        /// Returns the bottom center of the bob ( the bottom collision )
-        /// </summary>
-        /// <returns></returns>
-        Vector3 GetBasePoint()
+        void RollAndPitch_bkp()
         {
-            return transform.position + cc.center - transform.up * cc.height / 2f;
+
+
+            if (!isGrounded)
+            {
+                // Use head to do move center of mass
+            }
+            else
+            {
+                Vector3 groundNormal = GetGroundNormal();
+                float speed = 40;
+                Vector3 targetNormal = groundNormal;
+                // Adjust the roll angle depending on the lateral speed
+                Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
+
+                Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
+                float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
+                // Project the center of mass on the ground plane
+                Vector3 com = Vector3.ProjectOnPlane(head.position - transform.position, Vector3.up);
+
+                com = Vector3.Project(com, rightProj);
+
+                // Sign < 0 means we are moving our head against the velocity ( the slope in theory ) to avoid overturn
+                float signCom = Vector3.Dot(velProj.normalized, com.normalized);
+                //Debug.Log("signCom:" + signCom);
+
+                // We must check the position of the head to determine the overturn angle
+                float baseHalfSize = cc.radius;
+                float headDist = com.magnitude; // The distance the head falls in the UP plane 
+                float headDir = Mathf.Sign(signCom); // <0 means against the slope to avoid overturn
+                Debug.Log("HeadFallDist:" + headDist);
+                // The threshold depends on the position of the head: the more the head is against the slope
+                // the higher is the threshold
+                if (headDir > 0 && headDist > baseHalfSize)
+                //if (Mathf.Abs(sign) > (overturnDotThreshold - headDir * headDist / baseHalfSize * 0.1f))
+                {
+                    float overturnFactor = 20;
+                    float targetAngle = overturnAngle + sign * overturnFactor;
+                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, targetAngle, 20 * Time.deltaTime);
+                }
+                else
+                {
+                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, 0, 40 * Time.deltaTime);
+                }
+
+                targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
+
+                // Compute pitch angle
+                float pitchAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.right);
+                pitchAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.x, transform.eulerAngles.x + pitchAngle, speed * Time.deltaTime);
+
+                // Compute roll angle
+
+                //targetAngle = Quaternion.Euler(0, 0, 20) * targetAngle;
+                float rollAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.forward);
+
+                rollAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.z, transform.eulerAngles.z + rollAngle, speed * Time.deltaTime);
+
+
+                Vector3 eulers = transform.eulerAngles;
+                eulers.x = pitchAngle;
+                eulers.z = rollAngle;
+                transform.eulerAngles = eulers;
+
+                //transform.Rotate(Vector3.forward, 20, Space.Self);
+
+
+
+            }
+
+
         }
 
         
+
+        Vector3 GetCenterOfMass()
+        {
+            return transform.TransformPoint((head.position - transform.position) * .5f);
+        }
 
         void CheckInput()
         {
