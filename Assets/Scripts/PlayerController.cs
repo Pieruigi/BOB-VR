@@ -22,6 +22,7 @@ namespace Bob
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
         float overturnAngle = 0;
+        float pitch, roll;
         
         [SerializeField]
         float drag = 0.5f;
@@ -232,20 +233,57 @@ namespace Bob
             }
             else
             {
-                
-                // Get the center of mass
-                Vector3 centerOfMass = GetCenterOfMass();
-                Debug.Log("CenterOfMass:" + centerOfMass);
+
+                //
+                // Adjust rotation depending on the ground
+                //
+                Vector3 groundNormal = GetGroundNormal();
+                float speed = 40;
+                //Vector3 targetNormal = groundNormal;
+                // Compute pitch angle
+                pitch = Vector3.SignedAngle(transform.up, groundNormal, transform.right) + transform.eulerAngles.x;
+                roll = Vector3.SignedAngle(transform.up, groundNormal, transform.forward) + transform.eulerAngles.z;
+                pitch = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
+                roll = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
+
+                // Compute roll angle
+
+                //targetAngle = Quaternion.Euler(0, 0, 20) * targetAngle;
+                Vector3 eulers = transform.eulerAngles;
+                eulers.x = pitch;
+                eulers.z = roll;
+                //eulers.x = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
+                //eulers.z = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
+                transform.eulerAngles = eulers;
+
+
+                //
+                // Check for overturn
+                //
+                //Vector3 centerOfMass = GetCenterOfMass() - transform.position; // From point to vector
+                //centerOfMass = transform.InverseTransformDirection(centerOfMass); // Local coordinates
+                Vector3 centerOfMass = transform.InverseTransformPoint(GetCenterOfMass());
+                centerOfMass.z = 0; // We only need right coordinates
+                bool isToTheRight = centerOfMass.x > 0; // True if the center of mass falls to the right
+                centerOfMass = transform.TransformPoint(centerOfMass);
+                // Where the center of mass falls on the horizontal plane
+                Vector3 comFall = Vector3.ProjectOnPlane(centerOfMass - transform.position, Vector3.up);
+                float halfSize = cc.radius;
+
+                Debug.Log("ComFall:" + comFall);
+                Debug.Log("ComFall.Magnitude:" + comFall.magnitude);
+                Debug.Log("IsToTheRight:" + isToTheRight);
+
                 // Compute the reaction force of the center of mass: if the center of mass projectes along the
                 // UP plane falls inside the bob then the force puts the bob down, otherwise the force applies to
                 // overturn by itslef )
                 // Project the center of mass on the horizontal plane
-                Vector3 comOnHorizontalPlane = Vector3.ProjectOnPlane(centerOfMass, Vector3.up);
-                Debug.Log("CenterOfMass.ProjectOnUP:" + comOnHorizontalPlane);
 
-                Vector3 groundNormal = GetGroundNormal();
-                float speed = 40;
-                Vector3 targetNormal = groundNormal;
+
+                //Debug.Log("CenterOfMass.ProjectOnUP:" + comOnHorizontalPlane);
+
+
+                
                 // Adjust the roll angle depending on the lateral speed
                 Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
                
@@ -281,24 +319,9 @@ namespace Bob
                
                 //targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
 
-                // Compute pitch angle
-                float pitchAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.right);
-                pitchAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.x, transform.eulerAngles.x + pitchAngle, speed * Time.deltaTime);
-
-                // Compute roll angle
-                
-                //targetAngle = Quaternion.Euler(0, 0, 20) * targetAngle;
-                float rollAngle = Vector3.SignedAngle(transform.up, targetNormal, transform.forward);
-                
-                rollAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.z, transform.eulerAngles.z + rollAngle, speed * Time.deltaTime);
                 
 
-                Vector3 eulers = transform.eulerAngles;
-                eulers.x = pitchAngle;
-                eulers.z = rollAngle;
-                transform.eulerAngles = eulers;
-
-                //transform.Rotate(Vector3.forward, 20, Space.Self);
+              
 
                 
                
@@ -382,10 +405,13 @@ namespace Bob
         }
 
         
-
+        /// <summary>
+        /// Returns the center of mass in world coordinates
+        /// </summary>
+        /// <returns></returns>
         Vector3 GetCenterOfMass()
         {
-            return transform.TransformPoint((head.position - transform.position) * .5f);
+            return transform.position + (head.position - transform.position) * .5f;
         }
 
         void CheckInput()
