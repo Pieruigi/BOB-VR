@@ -113,19 +113,28 @@ namespace Bob
         /// <returns></returns>
         public bool IsGrounded()
         {
-            Vector3 point0 = transform.position + cc.center + Vector3.up * ( cc.height / 2f - cc.radius);
-            Vector3 point1 = transform.position + cc.center + Vector3.up * (cc.radius - cc.height / 2f);
+            //Vector3 point0 = transform.position + cc.center + Vector3.up * ( cc.height / 2f - cc.radius);
+            //Vector3 point1 = transform.position + cc.center + Vector3.up * (cc.radius - cc.height / 2f);
+            //LayerMask mask = LayerMask.GetMask(new string[] { Layers.Ground });
+            //Collider[] colls = Physics.OverlapCapsule(point0, point1, cc.radius + 2*cc.skinWidth, mask);
+            //if (colls == null || colls.Length == 0)
+            //    return false;
+            //else 
+            //    return true;
+
+            Vector3 center = transform.position + cc.center;
+            //Debug.Log("Center:" + center);
             LayerMask mask = LayerMask.GetMask(new string[] { Layers.Ground });
-            Collider[] colls = Physics.OverlapCapsule(point0, point1, cc.radius + 2*cc.skinWidth, mask);
+            Collider[] colls = Physics.OverlapSphere(center, cc.radius + 2*cc.skinWidth, mask);
             if (colls == null || colls.Length == 0)
                 return false;
-            else 
+            else
                 return true;
         }
         #endregion
 
         #region private methods
-       
+
 
         Vector3 GetGroundNormal()
         {
@@ -254,7 +263,7 @@ namespace Bob
                 eulers.z = roll;
                 //eulers.x = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
                 //eulers.z = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
-                transform.eulerAngles = eulers;
+                //transform.eulerAngles = eulers;
 
 
                 //
@@ -264,16 +273,31 @@ namespace Bob
                 //centerOfMass = transform.InverseTransformDirection(centerOfMass); // Local coordinates
                 Vector3 centerOfMass = transform.InverseTransformPoint(GetCenterOfMass());
                 centerOfMass.z = 0; // We only need right coordinates
-                bool isToTheRight = centerOfMass.x > 0; // True if the center of mass falls to the right
+                //bool isToTheRight = centerOfMass.x > 0; // True if the center of mass falls to the right
                 centerOfMass = transform.TransformPoint(centerOfMass);
                 // Where the center of mass falls on the horizontal plane
                 Vector3 comFall = Vector3.ProjectOnPlane(centerOfMass - transform.position, Vector3.up);
-                float halfSize = cc.radius;
+                //float halfSize = cc.radius;
+                Vector3 rFall = Vector3.ProjectOnPlane(transform.right * cc.radius, Vector3.up);
+                //Vector3 lRgt = Vector3.ProjectOnPlane(transform.left * cc.radius, Vector3.up);
+                float massFactor = 1f;
 
                 Debug.Log("ComFall:" + comFall);
                 Debug.Log("ComFall.Magnitude:" + comFall.magnitude);
-                Debug.Log("IsToTheRight:" + isToTheRight);
-
+                Debug.Log("rFall:" + rFall);
+                Debug.Log("rFall.Magnitude:" + rFall.magnitude);
+                //Debug.Log("IsToTheRight:" + isToTheRight);
+                Vector3 tmp = comFall - rFall;
+                // Positive angle when the center of mass falls within the bob base, otherwise is negative
+                float rRotForce = -massFactor * tmp.magnitude * Vector3.Dot(tmp.normalized, rFall.normalized);
+                Debug.Log("rRotForce:" + rRotForce);
+                //tmp = comFall + rFall;
+                // Negative force when the center of mass falls within the bob base, otherwise is positive
+                float lRotForce = rRotForce - massFactor;// -massFactor * tmp.magnitude * Vector3.Dot(tmp.normalized, rFall.normalized);
+                //rRotForce *= massFactor;
+                //lRotForce *= massFactor;
+                Debug.Log("lRotForce:" + lRotForce);
+                
                 // Compute the reaction force of the center of mass: if the center of mass projectes along the
                 // UP plane falls inside the bob then the force puts the bob down, otherwise the force applies to
                 // overturn by itslef )
@@ -283,7 +307,7 @@ namespace Bob
                 //Debug.Log("CenterOfMass.ProjectOnUP:" + comOnHorizontalPlane);
 
 
-                
+
                 // Adjust the roll angle depending on the lateral speed
                 Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
                
@@ -411,7 +435,7 @@ namespace Bob
         /// <returns></returns>
         Vector3 GetCenterOfMass()
         {
-            return transform.position + (head.position - transform.position) * .5f;
+            return transform.position + (head.position - transform.position) * 0.5f;
         }
 
         void CheckInput()
