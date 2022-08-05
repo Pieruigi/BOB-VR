@@ -23,6 +23,7 @@ namespace Bob
         float ySpeed = 0; // The vertical speed applied when not grounded
         float overturnAngle = 0;
         float pitch, roll;
+        float rollOverturn;
         
         [SerializeField]
         float drag = 0.5f;
@@ -297,6 +298,104 @@ namespace Bob
                 //rRotForce *= massFactor;
                 //lRotForce *= massFactor;
                 Debug.Log("lRotForce:" + lRotForce);
+
+                // Compute the overturn force given by the movement
+                float overturnForceByMovement = 0;
+                //rollOverturn = 10;
+                // We don't use overturn forces if the bob is laying on the ground and there is no movement
+                // forcing it to overturn and the center of mass falls within the base
+                if(!(rollOverturn == 0 && overturnForceByMovement == 0 && rRotForce >= 0 && lRotForce <= 0))
+                {
+
+                    float totalForce = 0;
+                    
+                    if(overturnForceByMovement == 0)
+                    {// No force is applied to overturn the bob, we apply center of mass only if the bob
+                     // has already been overturned and/or the center of mass falls outside the base
+
+                        if (rollOverturn != 0 || rRotForce < 0 || lRotForce > 0)
+                        {
+                            if(rollOverturn == 0)
+                            {
+                                totalForce = rRotForce < 0 ? rRotForce : lRotForce;
+                            }
+                            else
+                            {
+                                totalForce = rollOverturn > 0 ? lRotForce : rRotForce;
+                            }
+                        }
+                    }
+                    else
+                    {// Bob is moving along its side, so we have a force 
+
+                        totalForce = overturnForceByMovement;
+
+                        // If the bob has already been overturned we can easily choose between L and R forces
+                        if(rollOverturn != 0)
+                        {
+                            if (rollOverturn > 0)
+                                totalForce += lRotForce;
+                            else
+                                totalForce += rRotForce;
+                        }
+                        else
+                        {
+                            if (overturnForceByMovement > 0) 
+                                totalForce = Mathf.Max(0, totalForce + lRotForce);
+                            else
+                                totalForce = Mathf.Min(0, totalForce + rRotForce);
+                        }
+                    }
+                    
+                    //if(rollOverturn != 0)
+                    //{
+                    //    if (rollOverturn > 0)
+                    //        totalForce = lRotForce;
+                    //    else
+                    //        totalForce = rRotForce;
+
+                        
+                    //    totalForce += indirectOverturnForce;
+                    //}
+                    //else
+                    //{
+                    //    if ((indirectOverturnForce == 0 && (rRotForce < 0 || lRotForce > 0)) || 
+                    //         indirectOverturnForce != 0)
+                    //    {
+                    //        if(indirectOverturnForce == 0)
+                    //        {
+                    //            if (rRotForce < 0)
+                    //                totalForce = rRotForce;
+                    //            else
+                    //                totalForce = lRotForce;
+                    //        }
+                    //        else
+                    //        {
+                    //            // The center of mass falls in the base
+                    //            if(rRotForce > 0 && lRotForce < 0)
+                    //            {
+                    //                if (indirectOverturnForce > 0)
+                    //                    totalForce = lRotForce;
+                    //                else
+                    //                    totalForce = rRotForce;
+
+                    //                totalForce += indirectOverturnForce;
+                    //            }
+                    //            else
+                    //            {
+                    //                // The center of mass doesn't fall in the base, so we must check which 
+                    //                // force is the strongest one
+
+                    //            }
+                    //        }
+                    //    }
+                       
+                    //}
+
+                    Debug.Log("TotalForce:" + totalForce);
+                    
+                }
+                
                 
                 // Compute the reaction force of the center of mass: if the center of mass projectes along the
                 // UP plane falls inside the bob then the force puts the bob down, otherwise the force applies to
