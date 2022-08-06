@@ -21,9 +21,9 @@ namespace Bob
         
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
-        float overturnAngle = 0;
-        float pitch, roll;
-        float rollOverturn;
+        float overturnAngle = 0; // Old one
+        float pitch = 0, roll = 0;
+        float rollOverturn = 0; // The overturn angle
         
         [SerializeField]
         float drag = 0.5f;
@@ -247,25 +247,23 @@ namespace Bob
                 //
                 // Adjust rotation depending on the ground
                 //
+                
                 Vector3 groundNormal = GetGroundNormal();
-                float speed = 40;
-                //Vector3 targetNormal = groundNormal;
-                // Compute pitch angle
-                pitch = Vector3.SignedAngle(transform.up, groundNormal, transform.right) + transform.eulerAngles.x;
-                roll = Vector3.SignedAngle(transform.up, groundNormal, transform.forward) + transform.eulerAngles.z;
-                pitch = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
-                roll = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
+                //float speed = 90;
+               
+                //Debug.Log("SignedPitch:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.right), Vector3.ProjectOnPlane(groundNormal, Vector3.right), Vector3.right));
+                pitch = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.right), Vector3.ProjectOnPlane(groundNormal, Vector3.right), Vector3.right) + transform.eulerAngles.x;
+                //Debug.Log("SignedRoll:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.forward), Vector3.ProjectOnPlane(groundNormal, Vector3.forward), Vector3.forward));
+                roll = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.forward), Vector3.ProjectOnPlane(groundNormal, Vector3.forward), Vector3.forward) + transform.eulerAngles.z;
+           
 
-                // Compute roll angle
+                //pitch = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
+                //roll = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
 
-                //targetAngle = Quaternion.Euler(0, 0, 20) * targetAngle;
                 Vector3 eulers = transform.eulerAngles;
                 eulers.x = pitch;
                 eulers.z = roll;
-                //eulers.x = Mathf.MoveTowardsAngle(transform.eulerAngles.x, pitch, speed * Time.deltaTime);
-                //eulers.z = Mathf.MoveTowardsAngle(transform.eulerAngles.z, roll, speed * Time.deltaTime);
-                //transform.eulerAngles = eulers;
-
+                
 
                 //
                 // Check for overturn
@@ -300,16 +298,16 @@ namespace Bob
                 Debug.Log("lRotForce:" + lRotForce);
 
                 // Compute the overturn force given by the movement
-                float overturnForceByMovement = 0;
+                float externalOverturnForce = 0;
                 //rollOverturn = 10;
-                // We don't use overturn forces if the bob is laying on the ground and there is no movement
-                // forcing it to overturn and the center of mass falls within the base
-                if(!(rollOverturn == 0 && overturnForceByMovement == 0 && rRotForce >= 0 && lRotForce <= 0))
+                // If the bob is laying on the ground, there is no slope along its side and its center of mass falls within 
+                // its base then there is no reason to compute the overturn force
+                if(!(rollOverturn == 0 && externalOverturnForce == 0 && rRotForce >= 0 && lRotForce <= 0))
                 {
 
                     float totalForce = 0;
                     
-                    if(overturnForceByMovement == 0)
+                    if(externalOverturnForce == 0)
                     {// No force is applied to overturn the bob, we apply center of mass only if the bob
                      // has already been overturned and/or the center of mass falls outside the base
 
@@ -328,7 +326,7 @@ namespace Bob
                     else
                     {// Bob is moving along its side, so we have a force 
 
-                        totalForce = overturnForceByMovement;
+                        totalForce = externalOverturnForce;
 
                         // If the bob has already been overturned we can easily choose between L and R forces
                         if(rollOverturn != 0)
@@ -340,114 +338,38 @@ namespace Bob
                         }
                         else
                         {
-                            if (overturnForceByMovement > 0) 
+                            if (externalOverturnForce > 0) 
                                 totalForce = Mathf.Max(0, totalForce + lRotForce);
                             else
                                 totalForce = Mathf.Min(0, totalForce + rRotForce);
                         }
                     }
+
+                    if(totalForce != 0)
+                    {
+                        float d = totalForce * 10 * Time.deltaTime;
+                        if (Mathf.Sign(rollOverturn*totalForce) > 0)
+                        {
+                            rollOverturn += d;
+                        }
+                        else
+                        {
+                            if (rollOverturn > 0)
+                                rollOverturn = Mathf.Max(0, rollOverturn + d);
+                            else
+                                rollOverturn = Mathf.Min(0, rollOverturn + d);
+                        }
+                    }
                     
-                    //if(rollOverturn != 0)
-                    //{
-                    //    if (rollOverturn > 0)
-                    //        totalForce = lRotForce;
-                    //    else
-                    //        totalForce = rRotForce;
-
-                        
-                    //    totalForce += indirectOverturnForce;
-                    //}
-                    //else
-                    //{
-                    //    if ((indirectOverturnForce == 0 && (rRotForce < 0 || lRotForce > 0)) || 
-                    //         indirectOverturnForce != 0)
-                    //    {
-                    //        if(indirectOverturnForce == 0)
-                    //        {
-                    //            if (rRotForce < 0)
-                    //                totalForce = rRotForce;
-                    //            else
-                    //                totalForce = lRotForce;
-                    //        }
-                    //        else
-                    //        {
-                    //            // The center of mass falls in the base
-                    //            if(rRotForce > 0 && lRotForce < 0)
-                    //            {
-                    //                if (indirectOverturnForce > 0)
-                    //                    totalForce = lRotForce;
-                    //                else
-                    //                    totalForce = rRotForce;
-
-                    //                totalForce += indirectOverturnForce;
-                    //            }
-                    //            else
-                    //            {
-                    //                // The center of mass doesn't fall in the base, so we must check which 
-                    //                // force is the strongest one
-
-                    //            }
-                    //        }
-                    //    }
-                       
-                    //}
-
+                    eulers.z += rollOverturn;
+                 
                     Debug.Log("TotalForce:" + totalForce);
                     
                 }
-                
-                
-                // Compute the reaction force of the center of mass: if the center of mass projectes along the
-                // UP plane falls inside the bob then the force puts the bob down, otherwise the force applies to
-                // overturn by itslef )
-                // Project the center of mass on the horizontal plane
 
+                transform.eulerAngles = eulers;
+             
 
-                //Debug.Log("CenterOfMass.ProjectOnUP:" + comOnHorizontalPlane);
-
-
-
-                // Adjust the roll angle depending on the lateral speed
-                Vector3 rightProj = Vector3.ProjectOnPlane(transform.right, groundNormal);
-               
-                Vector3 velProj = Vector3.ProjectOnPlane(targetVelocity, groundNormal);
-                float sign = -Vector3.Dot(velProj.normalized, rightProj.normalized);
-                // Project the center of mass on the ground plane
-                Vector3 com = Vector3.ProjectOnPlane(head.position - transform.position, Vector3.up);
-                
-                com = Vector3.Project(com, rightProj);
-                
-                // Sign < 0 means we are moving our head against the velocity ( the slope in theory ) to avoid overturn
-                float signCom = Vector3.Dot(velProj.normalized, com.normalized);
-                //Debug.Log("signCom:" + signCom);
-
-                // We must check the position of the head to determine the overturn angle
-                float baseHalfSize = cc.radius;
-                float headDist = com.magnitude; // The distance the head falls in the UP plane 
-                float headDir = Mathf.Sign(signCom); // <0 means against the slope to avoid overturn
-                
-                // The threshold depends on the position of the head: the more the head is against the slope
-                // the higher is the threshold
-                if(headDir > 0 && headDist > baseHalfSize)
-                //if (Mathf.Abs(sign) > (overturnDotThreshold - headDir * headDist / baseHalfSize * 0.1f))
-                {
-                    float overturnFactor = 20;
-                    float targetAngle = overturnAngle + sign * overturnFactor;
-                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, targetAngle, 20 * Time.deltaTime);
-                }
-                else
-                {
-                    overturnAngle = Mathf.MoveTowardsAngle(overturnAngle, 0, 40 * Time.deltaTime);
-                }
-               
-                //targetNormal = Quaternion.AngleAxis(overturnAngle, transform.forward) * groundNormal;
-
-                
-
-              
-
-                
-               
             }    
 
             
@@ -534,7 +456,7 @@ namespace Bob
         /// <returns></returns>
         Vector3 GetCenterOfMass()
         {
-            return transform.position + (head.position - transform.position) * 0.5f;
+            return transform.position - transform.up * cc.radius + (head.position - transform.position) * 0.8f;
         }
 
         void CheckInput()
