@@ -21,8 +21,7 @@ namespace Bob
         
         bool isGrounded; // Cached value
         float ySpeed = 0; // The vertical speed applied when not grounded
-        float overturnRoll = 0;
-
+        
         [SerializeField]
         float drag = 0.5f;
 
@@ -96,9 +95,9 @@ namespace Bob
             //
             // Roll and pitch
             //
-            //RollAndPitch();
+            RollAndPitch();
 
-            Test();    
+            //Test();    
         }
 
         void Test()
@@ -253,12 +252,12 @@ namespace Bob
                 Vector3 groundNormal = GetGroundNormal();
 
                 //Debug.Log("SignedPitch:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.right), Vector3.ProjectOnPlane(groundNormal, Vector3.right), Vector3.right));
-                float groundPitch = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.right), Vector3.ProjectOnPlane(groundNormal, Vector3.right), Vector3.right);
+                float groundPitch = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, transform.right), Vector3.ProjectOnPlane(groundNormal, transform.right), transform.right);
                 if (Vector3.Dot(transform.right, Vector3.right) < 0)
                     groundPitch *= -1;
                 groundPitch += transform.eulerAngles.x;
                 //Debug.Log("SignedRoll:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.forward), Vector3.ProjectOnPlane(groundNormal, Vector3.forward), Vector3.forward));
-                float groundRoll = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.forward), Vector3.ProjectOnPlane(groundNormal, Vector3.forward), Vector3.forward);
+                float groundRoll = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, transform.forward), Vector3.ProjectOnPlane(groundNormal, transform.forward), transform.forward);
                 if (Vector3.Dot(transform.right, Vector3.right) < 0)
                     groundRoll *= -1;
 
@@ -271,7 +270,7 @@ namespace Bob
                 // Get the overturn angle, which is the difference between the actual pitch and the 
                 // pitch you should have depending on the ground
                 
-                //float overturnRoll = eulers.z - groundRoll;
+                float overturnRoll = eulers.z - groundRoll;
 
                 // Update euler vector
                 eulers.x = groundPitch;
