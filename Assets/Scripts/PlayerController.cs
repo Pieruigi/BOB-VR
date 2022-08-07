@@ -97,13 +97,9 @@ namespace Bob
             //
             RollAndPitch();
 
-            //Test();    
         }
 
-        void Test()
-        {
-
-        }
+ 
 
 
         #endregion
@@ -253,13 +249,11 @@ namespace Bob
 
                 //Debug.Log("SignedPitch:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.right), Vector3.ProjectOnPlane(groundNormal, Vector3.right), Vector3.right));
                 float groundPitch = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, transform.right), Vector3.ProjectOnPlane(groundNormal, transform.right), transform.right);
-                if (Vector3.Dot(transform.right, Vector3.right) < 0)
-                    groundPitch *= -1;
+                
                 groundPitch += transform.eulerAngles.x;
                 //Debug.Log("SignedRoll:" + Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, Vector3.forward), Vector3.ProjectOnPlane(groundNormal, Vector3.forward), Vector3.forward));
                 float groundRoll = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, transform.forward), Vector3.ProjectOnPlane(groundNormal, transform.forward), transform.forward);
-                if (Vector3.Dot(transform.right, Vector3.right) < 0)
-                    groundRoll *= -1;
+               
 
                 groundRoll += transform.eulerAngles.z;
                 Debug.Log("GroundPitch:" + groundPitch);
@@ -314,14 +308,22 @@ namespace Bob
                 if(angle > 90 + range || angle < 90 - range)
                 {
                     if (angle < 90 - range)
-                        externalOverturnForce = -.5f;
+                    {
+                        float angleFactor = angle / (90f - range) * 0.5f - 1f;
+                        externalOverturnForce = angleFactor * 2 ;
+                    }
+
                     else
-                        externalOverturnForce = .5f;
+                    {
+                        float angleFactor = 0.5f * (2f - (180f - angle) / (180f - 90f - range));
+                        externalOverturnForce = angleFactor * 2;
+                    }
+                        
                 } 
 
                 Debug.Log("angle:" + angle);
                 Debug.Log("externalOverturnForce:" + externalOverturnForce);
-                externalOverturnForce = 0;
+                //externalOverturnForce = 0;
                 //rollOverturn = 10;
                 // If the bob is laying on the ground, there is no slope along its side and its center of mass falls within 
                 // its base then there is no reason to compute the overturn force
@@ -370,7 +372,7 @@ namespace Bob
 
                     if(totalForce != 0)
                     {
-                        float d = totalForce * 10 * Time.deltaTime;
+                        float d = totalForce * 20 * Time.deltaTime;
                         if (Mathf.Sign(overturnRoll * totalForce) > 0)
                         {
                             overturnRoll += d;
