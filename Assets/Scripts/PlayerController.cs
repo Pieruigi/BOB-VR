@@ -29,7 +29,7 @@ namespace Bob
         float directionChangeSpeed = 5;
 
         [SerializeField]
-        float rotationSpeed = 80;
+        float rotationSpeed = 180;
 
         /// <summary>
         /// X: lateral friction
@@ -172,7 +172,7 @@ namespace Bob
                     rightBrakeRatio = dist / brakeLength;
                 }
                 // Rotate accordingly to the braking force
-                transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
+                transform.Rotate(Vector3.up, Mathf.Sign(Vector3.Dot(cc.velocity, transform.forward)) * rotationSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
 
                 // 
                 // Move the bob
@@ -224,6 +224,7 @@ namespace Bob
             // Drag => v = v * ( 1 - drag * dt )
             float dragDelta = 1 - drag * Time.deltaTime;
             targetVelocity *= dragDelta;
+            targetVelocity = Vector3.zero;
             ySpeed *= dragDelta;
             
             cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
@@ -300,36 +301,64 @@ namespace Bob
                 //lRotForce *= massFactor;
                 Debug.Log("lRotForce:" + lRotForce);
 
-                // Compute the overturn force given by the movement
+
                 float externalOverturnForce = 0;
-
-                float angle = Vector3.Angle(Vector3.ProjectOnPlane(cc.velocity, Vector3.up), Vector3.ProjectOnPlane(transform.right, Vector3.up));
-                float range = 20;
-                if(angle > 90 + range || angle < 90 - range)
+                // Compute the overturn force given by the side speed
+                if(cc.velocity.magnitude != 0)
                 {
-                    if (angle < 90 - range)
-                    {
-                        float angleFactor = angle / (90f - range) * 0.5f - 1f;
-                        externalOverturnForce = angleFactor * 2 ;
-                    }
+                    float angle = 90;
 
-                    else
+                    angle = Vector3.Angle(Vector3.ProjectOnPlane(cc.velocity, Vector3.up), Vector3.ProjectOnPlane(transform.right, Vector3.up));
+                    float range = 0;
+                    float max = 2;
+                    if (angle > 90 + range || angle < 90 - range)
                     {
-                        float angleFactor = 0.5f * (2f - (180f - angle) / (180f - 90f - range));
-                        externalOverturnForce = angleFactor * 2;
-                    }
-                        
-                } 
+                        if (angle < 90 - range)
+                        {
+                            float angleFactor = max * (angle / (90f - range) - 1f);
+                            externalOverturnForce = angleFactor;
+                        }
 
-                Debug.Log("angle:" + angle);
+                        else
+                        {
+                            float angleFactor = max * (1f - ((180f - angle) / (90f - range)));
+                            externalOverturnForce = angleFactor;
+                        }
+                    }
+                    Debug.Log("angle:" + angle);
+                }
+
+                // Add a component to the overturn force given by the side slope
+                if(groundNormal != Vector3.up)
+                {
+                    float angle = Vector3.Angle(Vector3.ProjectOnPlane(transform.right, Vector3.up), Vector3.ProjectOnPlane(groundNormal, Vector3.up));
+                    float range = 0;
+                    float max = .5f * Vector3.ProjectOnPlane(groundNormal, Vector3.up).magnitude;
+                    if (angle > 90 + range || angle < 90 - range)
+                    {
+                        if (angle < 90 - range)
+                        {
+                            float angleFactor = max * (angle/(90-range) - 1);
+                            externalOverturnForce += angleFactor;
+                        }
+
+                        else
+                        {
+                            float angleFactor = max * (1 - (180f-angle)/(90f-range));
+                            externalOverturnForce += angleFactor;
+                        }
+                    }
+                    Debug.Log("angle2:" + angle);
+                }
+
+                
                 Debug.Log("externalOverturnForce:" + externalOverturnForce);
                 //externalOverturnForce = 0;
                 //rollOverturn = 10;
-                // If the bob is laying on the ground, there is no slope along its side and its center of mass falls within 
-                // its base then there is no reason to compute the overturn force
+                // Compute the total overturn force if any
                 if (!(overturnRoll == 0 && externalOverturnForce == 0 && rRotForce >= 0 && lRotForce <= 0))
                 {
-
+                   
                     float totalForce = 0;
                     
                     if(externalOverturnForce == 0)
@@ -370,6 +399,8 @@ namespace Bob
                         }
                     }
 
+                    
+
                     if(totalForce != 0)
                     {
                         float d = totalForce * 20 * Time.deltaTime;
@@ -386,11 +417,13 @@ namespace Bob
                         }
                     }
                     
-                    //Quaternion.el
+                    
 
                     eulers.z += overturnRoll;
                  
                     Debug.Log("TotalForce:" + totalForce);
+
+                    
                     
                 }
 
@@ -411,7 +444,7 @@ namespace Bob
         /// <returns></returns>
         Vector3 GetCenterOfMass()
         {
-            return transform.position - transform.up * cc.radius + (head.position - transform.position) * 0.8f;
+            return transform.position - transform.up * cc.radius + (head.position - transform.position) * 1f;
         }
 
         void CheckInput()

@@ -16,6 +16,9 @@ namespace Bob.Test
         [SerializeField]
         Transform targetvelocityV;
 
+        [SerializeField]
+        Transform overrunForce;
+
         CharacterController characterController;
         PlayerController playerController;
 
