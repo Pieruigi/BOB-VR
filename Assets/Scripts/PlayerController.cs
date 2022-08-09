@@ -276,14 +276,23 @@ namespace Bob
                 //
                 // Check for overturn
                 //
+                float cos = Vector3.Dot(transform.up, Vector3.up);
                 // Transform to local coords
                 Vector3 centerOfMass = transform.InverseTransformPoint(GetCenterOfMass());
                 centerOfMass.z = 0; // We only need right coordinates
                 // Back to world coords
                 centerOfMass = transform.TransformPoint(centerOfMass);
                 // Where the center of mass falls on the horizontal plane
-                Vector3 comFall = Vector3.ProjectOnPlane(centerOfMass - transform.position, Vector3.up);
-                Vector3 rFall = Vector3.ProjectOnPlane(transform.right * cc.radius, Vector3.up);
+                Vector3 comFall = Vector3.ProjectOnPlane(centerOfMass - GetBasePosition(), Vector3.up);
+                Debug.Log("AAAA:" + (centerOfMass - GetBasePosition()));
+                if (cos != 0)
+                {
+                    float d = comFall.magnitude / Mathf.Abs(cos);
+                    comFall = d * Vector3.Project(comFall, transform.right).normalized;
+                }
+                Vector3 rFall = transform.right * cc.radius;
+                
+                    
                 float massFactor = 1f;
 
                 Debug.Log("ComFall:" + comFall);
@@ -291,26 +300,25 @@ namespace Bob
                 Debug.Log("rFall:" + rFall);
                 Debug.Log("rFall.Magnitude:" + rFall.magnitude);
                 Vector3 dist = comFall - rFall;
+                Debug.Log("Dist:" + dist);
                 // Positive angle when the center of mass falls within the bob base, otherwise is negative
-                float rRotForce = -massFactor * dist.magnitude * Vector3.Dot(dist.normalized, rFall.normalized);
+                float rRotForce = -massFactor * dist.magnitude * Mathf.Sign(Vector3.Dot(dist.normalized, rFall.normalized));
                 Debug.Log("rRotForce:" + rRotForce);
-                //tmp = comFall + rFall;
                 // Negative force when the center of mass falls within the bob base, otherwise is positive
                 float lRotForce = rRotForce - massFactor;// -massFactor * tmp.magnitude * Vector3.Dot(tmp.normalized, rFall.normalized);
-                //rRotForce *= massFactor;
-                //lRotForce *= massFactor;
                 Debug.Log("lRotForce:" + lRotForce);
 
 
                 float externalOverturnForce = 0;
                 // Compute the overturn force given by the side speed
-                if(cc.velocity.magnitude != 0)
+                Vector3 vel = cc.velocity;
+                //vel = new Vector3(2.3f, 0, 0);
+                if (vel.magnitude != 0)
                 {
                     float angle = 90;
-
-                    angle = Vector3.Angle(Vector3.ProjectOnPlane(cc.velocity, Vector3.up), Vector3.ProjectOnPlane(transform.right, Vector3.up));
+                    angle = Vector3.Angle(Vector3.ProjectOnPlane(vel, Vector3.up), Vector3.ProjectOnPlane(transform.right, Vector3.up));
                     float range = 0;
-                    float max = 2;
+                    float max = 0.75f / ( 1 + vel.magnitude );
                     if (angle > 90 + range || angle < 90 - range)
                     {
                         if (angle < 90 - range)
@@ -444,7 +452,12 @@ namespace Bob
         /// <returns></returns>
         Vector3 GetCenterOfMass()
         {
-            return transform.position - transform.up * cc.radius + (head.position - transform.position) * 1f;
+            return GetBasePosition() + (head.position-GetBasePosition()) * 1f;
+        }
+
+        Vector3 GetBasePosition()
+        {
+            return transform.position - transform.up * cc.radius;
         }
 
         void CheckInput()
