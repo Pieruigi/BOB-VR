@@ -29,7 +29,7 @@ namespace Bob
         float directionChangeSpeed = 5;
 
         [SerializeField]
-        float rotationSpeed = 180;
+        float rotationSpeed = 270;
 
         /// <summary>
         /// X: lateral friction
@@ -95,7 +95,7 @@ namespace Bob
             //
             // Roll and pitch
             //
-            RollAndPitch();
+            //RollAndPitch();
 
         }
 
@@ -156,6 +156,7 @@ namespace Bob
                 // Apply brakes
                 //
                 // Raycast from both left and right brakes
+                float lastSpeed = cc.velocity.magnitude;
                 RaycastHit hitInfo;
                 float leftBrakeRatio = 0;
                 float rightBrakeRatio = 0;
@@ -172,7 +173,15 @@ namespace Bob
                     rightBrakeRatio = dist / brakeLength;
                 }
                 // Rotate accordingly to the braking force
-                transform.Rotate(Vector3.up, Mathf.Sign(Vector3.Dot(cc.velocity, transform.forward)) * rotationSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
+                Vector3 vel = cc.velocity;
+                vel.y = 0;
+                Vector3 fVel = Vector3.Project(vel, transform.forward);
+                float sign = Mathf.Sign(Vector3.Dot(cc.velocity, transform.forward));
+                if (sign == 0)
+                    sign = 1;
+                float rotSpeed = Mathf.Min(rotationSpeed, rotationSpeed * fVel.magnitude * 0.1f);
+                Debug.Log("ROT SPEED:" + rotSpeed);
+                transform.Rotate(Vector3.up, sign * rotSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
 
                 // 
                 // Move the bob
@@ -224,7 +233,7 @@ namespace Bob
             // Drag => v = v * ( 1 - drag * dt )
             float dragDelta = 1 - drag * Time.deltaTime;
             targetVelocity *= dragDelta;
-            targetVelocity = Vector3.zero;
+            //targetVelocity = Vector3.zero;
             ySpeed *= dragDelta;
             
             cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
@@ -278,13 +287,23 @@ namespace Bob
                 //
                 float cos = Vector3.Dot(transform.up, Vector3.up);
                 // Transform to local coords
-                Vector3 centerOfMass = transform.InverseTransformPoint(GetCenterOfMass());
-                centerOfMass.z = 0; // We only need right coordinates
-                // Back to world coords
-                centerOfMass = transform.TransformPoint(centerOfMass);
+                //Vector3 centerOfMass = transform.InverseTransformPoint(GetCenterOfMass());
+                //centerOfMass.z = 0; // We only need right coordinates
+                //// Back to world coords
+                //centerOfMass = transform.TransformPoint(centerOfMass);
                 // Where the center of mass falls on the horizontal plane
-                Vector3 comFall = Vector3.ProjectOnPlane(centerOfMass - GetBasePosition(), Vector3.up);
-                Debug.Log("AAAA:" + (centerOfMass - GetBasePosition()));
+                
+                Vector3 centerOfMass = GetCenterOfMass();
+                Vector3 comFall = centerOfMass - GetBasePosition();
+                Debug.Log("ComFall1:" + comFall);
+                comFall = Vector3.ProjectOnPlane(comFall, Vector3.up);
+                Debug.Log("ComFall2:" + comFall);
+                comFall = transform.InverseTransformDirection(comFall);
+                Debug.Log("ComFall3:" + comFall);
+                comFall.z = 0;
+                Debug.Log("ComFall4:" + comFall);
+                comFall = transform.TransformDirection(comFall);
+                Debug.Log("ComFall5:" + comFall);
                 if (cos != 0)
                 {
                     float d = comFall.magnitude / Mathf.Abs(cos);
