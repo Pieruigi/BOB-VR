@@ -95,7 +95,7 @@ namespace Bob
             //
             // Roll and pitch
             //
-            //RollAndPitch();
+            RollAndPitch();
 
         }
 
@@ -179,7 +179,7 @@ namespace Bob
                 float sign = Mathf.Sign(Vector3.Dot(cc.velocity, transform.forward));
                 if (sign == 0)
                     sign = 1;
-                float rotSpeed = Mathf.Min(rotationSpeed, rotationSpeed * fVel.magnitude * 0.1f);
+                float rotSpeed = Mathf.Min(rotationSpeed, rotationSpeed * 0.1f * fVel.magnitude + 10);
                 Debug.Log("ROT SPEED:" + rotSpeed);
                 transform.Rotate(Vector3.up, sign * rotSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
 
@@ -266,8 +266,8 @@ namespace Bob
                
 
                 groundRoll += transform.eulerAngles.z;
-                Debug.Log("GroundPitch:" + groundPitch);
-                Debug.Log("GroundRoll:" + groundRoll);
+                //Debug.Log("GroundPitch:" + groundPitch);
+                //Debug.Log("GroundRoll:" + groundRoll);
 
                 Vector3 eulers = transform.eulerAngles;
                 
@@ -295,15 +295,15 @@ namespace Bob
                 
                 Vector3 centerOfMass = GetCenterOfMass();
                 Vector3 comFall = centerOfMass - GetBasePosition();
-                Debug.Log("ComFall1:" + comFall);
+                //Debug.Log("ComFall1:" + comFall);
                 comFall = Vector3.ProjectOnPlane(comFall, Vector3.up);
-                Debug.Log("ComFall2:" + comFall);
+                //Debug.Log("ComFall2:" + comFall);
                 comFall = transform.InverseTransformDirection(comFall);
-                Debug.Log("ComFall3:" + comFall);
+                //Debug.Log("ComFall3:" + comFall);
                 comFall.z = 0;
-                Debug.Log("ComFall4:" + comFall);
+                //Debug.Log("ComFall4:" + comFall);
                 comFall = transform.TransformDirection(comFall);
-                Debug.Log("ComFall5:" + comFall);
+                //Debug.Log("ComFall5:" + comFall);
                 if (cos != 0)
                 {
                     float d = comFall.magnitude / Mathf.Abs(cos);
@@ -314,12 +314,12 @@ namespace Bob
                     
                 float massFactor = 1f;
 
-                Debug.Log("ComFall:" + comFall);
-                Debug.Log("ComFall.Magnitude:" + comFall.magnitude);
-                Debug.Log("rFall:" + rFall);
-                Debug.Log("rFall.Magnitude:" + rFall.magnitude);
+                //Debug.Log("ComFall:" + comFall);
+                //Debug.Log("ComFall.Magnitude:" + comFall.magnitude);
+                //Debug.Log("rFall:" + rFall);
+                //Debug.Log("rFall.Magnitude:" + rFall.magnitude);
                 Vector3 dist = comFall - rFall;
-                Debug.Log("Dist:" + dist);
+                //Debug.Log("Dist:" + dist);
                 // Positive angle when the center of mass falls within the bob base, otherwise is negative
                 float rRotForce = -massFactor * dist.magnitude * Mathf.Sign(Vector3.Dot(dist.normalized, rFall.normalized));
                 Debug.Log("rRotForce:" + rRotForce);
@@ -331,7 +331,7 @@ namespace Bob
                 float externalOverturnForce = 0;
                 // Compute the overturn force given by the side speed
                 Vector3 vel = cc.velocity;
-                //vel = new Vector3(2.3f, 0, 0);
+                //vel = new Vector3(3f, 0, 3);
                 if (vel.magnitude != 0)
                 {
                     float angle = 90;
@@ -352,7 +352,7 @@ namespace Bob
                             externalOverturnForce = angleFactor;
                         }
                     }
-                    Debug.Log("angle:" + angle);
+                    Debug.Log("overturnForce(speed):" + externalOverturnForce);
                 }
 
                 // Add a component to the overturn force given by the side slope
@@ -360,7 +360,7 @@ namespace Bob
                 {
                     float angle = Vector3.Angle(Vector3.ProjectOnPlane(transform.right, Vector3.up), Vector3.ProjectOnPlane(groundNormal, Vector3.up));
                     float range = 0;
-                    float max = .5f * Vector3.ProjectOnPlane(groundNormal, Vector3.up).magnitude;
+                    float max = .75f * Vector3.ProjectOnPlane(groundNormal, Vector3.up).magnitude;
                     if (angle > 90 + range || angle < 90 - range)
                     {
                         if (angle < 90 - range)
@@ -375,7 +375,7 @@ namespace Bob
                             externalOverturnForce += angleFactor;
                         }
                     }
-                    Debug.Log("angle2:" + angle);
+                    //Debug.Log("angle2:" + angle);
                 }
 
                 
@@ -448,16 +448,14 @@ namespace Bob
 
                     eulers.z += overturnRoll;
                  
-                    Debug.Log("TotalForce:" + totalForce);
+                    Debug.Log("TotalOverturnForce:" + totalForce);
 
                     
                     
                 }
 
                 transform.eulerAngles = eulers;
-                //transform.rotation = Quaternion.AngleAxis(overturnRoll, transform.forward);
-                //if (overturnRoll != 0)
-                //    transform.Rotate(transform.forward, overturnRoll - oldOverTurnRoll, Space.Self);
+               
 
             }    
 
