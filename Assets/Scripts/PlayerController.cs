@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 
 
@@ -60,25 +61,30 @@ namespace Bob
 
         [SerializeField]
         Transform seat;
-        
+
+        XROrigin xrOrigin;
+
         #endregion
 
         #region native methods
         private void Awake()
         {
             cc = GetComponent<CharacterController>();
-            
+            xrOrigin = GetComponent<XROrigin>();
         }
 
         // Start is called before the first frame update
         void Start()
         {
-
+            xrOrigin.CameraFloorOffsetObject.transform.localPosition = new Vector3(0.18f, -0.75f, -0.3f);
+            
         }
 
         // Update is called once per frame
         void Update()
         {
+            xrOrigin.CameraFloorOffsetObject.transform.localPosition = new Vector3(0.18f, -0.75f, -0.3f);
+
             // isGrounded value is cached 
             isGrounded = IsGrounded();
 
