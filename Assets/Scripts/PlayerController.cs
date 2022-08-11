@@ -60,9 +60,13 @@ namespace Bob
         Transform head;
 
         [SerializeField]
+        Transform cameraOffsetTransform;
+
+        [SerializeField]
         Transform seat;
 
         XROrigin xrOrigin;
+        Vector3 cameraOffsetPosition;
 
         #endregion
 
@@ -76,14 +80,16 @@ namespace Bob
         // Start is called before the first frame update
         void Start()
         {
-            xrOrigin.CameraFloorOffsetObject.transform.localPosition = new Vector3(0.18f, -0.75f, -0.3f);
-            
+            //xrOrigin.CameraFloorOffsetObject.transform.localPosition = cameraOffsetTransform.localPosition;
+            //xrOrigin.CameraFloorOffsetObject.transform.localRotation = cameraOffsetTransform.localRotation;
+
         }
 
         // Update is called once per frame
         void Update()
         {
-            xrOrigin.CameraFloorOffsetObject.transform.localPosition = new Vector3(0.18f, -0.75f, -0.3f);
+            if(Input.GetKeyDown(KeyCode.R))
+                ResetCameraOffset();
 
             // isGrounded value is cached 
             isGrounded = IsGrounded();
@@ -137,10 +143,20 @@ namespace Bob
             else
                 return true;
         }
+
+        public void ResetCameraOffset()
+        {
+            float rotationAngleY = cameraOffsetTransform.eulerAngles.y - xrOrigin.Camera.transform.eulerAngles.y;
+            xrOrigin.CameraFloorOffsetObject.transform.Rotate(0, rotationAngleY, 0);
+            Vector3 position = cameraOffsetTransform.position - xrOrigin.Camera.transform.position;
+            xrOrigin.CameraFloorOffsetObject.transform.position += position;
+        }
+
+        
         #endregion
 
         #region private methods
-
+        
 
         Vector3 GetGroundNormal()
         {
