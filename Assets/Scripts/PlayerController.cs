@@ -97,7 +97,7 @@ namespace Bob
             //
             // Check input
             //
-            CheckInput();
+            //CheckInput();
                        
 
             //
@@ -259,7 +259,7 @@ namespace Bob
             //targetVelocity = Vector3.zero;
             ySpeed *= dragDelta;
             
-            cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
+            //cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
         }
 
 
