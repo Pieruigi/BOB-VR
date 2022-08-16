@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class XRBrakeInteractable : XRGrabInteractable
 {
-    bool fixedAttachPoint = true;
+    bool fixedAttachPoint;
     float attachPointStartingAngle = 0; // The starting forward angle on grab enter
     float attachPointCurrentAngle = 0; // The current forward angle
     float brakeStartingAngle; // The starting forward angle on grab enter
@@ -13,6 +13,7 @@ public class XRBrakeInteractable : XRGrabInteractable
     Transform parent;
     float brakeMinAngle = 0; 
     float brakeMaxAngle = 90;
+    Vector3 offset;
 
     protected override void Awake()
     {
@@ -25,9 +26,17 @@ public class XRBrakeInteractable : XRGrabInteractable
             attachTransform.SetParent(transform, false);
             fixedAttachPoint = false;
         }
+        else
+        {
+            fixedAttachPoint = true;
+        }
 
         parent = transform.parent;
+        offset = transform.localPosition;
+        Debug.Log("Offset:" + offset);
     }
+
+
 
     protected override void OnSelectEntered(SelectEnterEventArgs args)
     {
@@ -72,9 +81,16 @@ public class XRBrakeInteractable : XRGrabInteractable
 
     public override void ProcessInteractable(XRInteractionUpdateOrder.UpdatePhase updatePhase)
     {
+       
         //base.ProcessInteractable(updatePhase);
         if(interactorsSelecting.Count > 0)
         {
+
+            // Reset position
+            transform.parent = parent;
+            transform.localPosition = offset;
+            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, 0, 0);
+            
 
             float attachPointLastAngle = attachPointCurrentAngle;
 
@@ -82,7 +98,7 @@ public class XRBrakeInteractable : XRGrabInteractable
             attachTransform.parent = null;
             attachTransform.position = interactorsSelecting[0].transform.position;
             //transform.position = attachTransform.position - dist;
-            attachTransform.parent = transform;
+            
            
             
             // Compute the current angle
@@ -118,6 +134,12 @@ public class XRBrakeInteractable : XRGrabInteractable
 
                 Debug.Log("AttachPointCurrentAngle:" + attachPointCurrentAngle);
             }
+
+            //transform.Rotate(-transform.right, diffAngle, Space.Self);
+            transform.localEulerAngles = new Vector3(-attachPointCurrentAngle, transform.localEulerAngles.y, transform.localEulerAngles.z);
+            
+            attachTransform.parent = transform;
+            transform.parent = null;
         }
             
     }

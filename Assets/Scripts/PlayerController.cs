@@ -53,6 +53,7 @@ namespace Bob
         [SerializeField]
         Transform rightBrakePivot;
 
+        // No VR only
         float leftBrake, rightBrake = 0; // 0: released; 1: maximum braking force
 
 
@@ -203,7 +204,7 @@ namespace Bob
                 if (sign == 0)
                     sign = 1;
                 float rotSpeed = Mathf.Min(rotationSpeed, rotationSpeed * 0.1f * fVel.magnitude + 10);
-                Debug.Log("ROT SPEED:" + rotSpeed);
+                //Debug.Log("ROT SPEED:" + rotSpeed);
                 transform.Rotate(Vector3.up, sign * rotSpeed * Time.deltaTime * (rightBrakeRatio - leftBrakeRatio));
 
                 // 
@@ -259,7 +260,7 @@ namespace Bob
             //targetVelocity = Vector3.zero;
             ySpeed *= dragDelta;
             
-            //cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
+            cc.Move(targetVelocity * Time.deltaTime + Vector3.up * ySpeed * Time.deltaTime);
         }
 
 
@@ -345,10 +346,10 @@ namespace Bob
                 //Debug.Log("Dist:" + dist);
                 // Positive angle when the center of mass falls within the bob base, otherwise is negative
                 float rRotForce = -massFactor * dist.magnitude * Mathf.Sign(Vector3.Dot(dist.normalized, rFall.normalized));
-                Debug.Log("rRotForce:" + rRotForce);
+                //Debug.Log("rRotForce:" + rRotForce);
                 // Negative force when the center of mass falls within the bob base, otherwise is positive
                 float lRotForce = rRotForce - massFactor;// -massFactor * tmp.magnitude * Vector3.Dot(tmp.normalized, rFall.normalized);
-                Debug.Log("lRotForce:" + lRotForce);
+                //Debug.Log("lRotForce:" + lRotForce);
 
 
                 float externalOverturnForce = 0;
@@ -375,7 +376,7 @@ namespace Bob
                             externalOverturnForce = angleFactor;
                         }
                     }
-                    Debug.Log("overturnForce(speed):" + externalOverturnForce);
+                    //Debug.Log("overturnForce(speed):" + externalOverturnForce);
                 }
 
                 // Add a component to the overturn force given by the side slope
@@ -402,7 +403,7 @@ namespace Bob
                 }
 
                 
-                Debug.Log("externalOverturnForce:" + externalOverturnForce);
+                //Debug.Log("externalOverturnForce:" + externalOverturnForce);
                 //externalOverturnForce = 0;
                 //rollOverturn = 10;
                 // Compute the total overturn force if any
@@ -471,7 +472,7 @@ namespace Bob
 
                     eulers.z += overturnRoll;
                  
-                    Debug.Log("TotalOverturnForce:" + totalForce);
+                    //Debug.Log("TotalOverturnForce:" + totalForce);
 
                     
                     
