@@ -2376,7 +2376,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 715897074}
-  m_LocalRotation: {x: -0.6446575, y: -0.000000014901161, z: -0.000000014901161, w: 0.76447153}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.3199985, y: 0.1300019, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2385,7 +2385,7 @@ Transform:
   - {fileID: 259552783}
   m_Father: {fileID: 485680391}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: -80.28, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &715897079
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3070,149 +3070,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 742218619106ed34895ee1be7bcb524b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_InteractionManager: {fileID: 0}
-  m_Colliders: []
-  m_InteractionLayerMask:
-    m_Bits: 4294967295
-  m_InteractionLayers:
-    m_Bits: 1
-    m_Mask: 1
-  m_SelectMode: 0
-  m_CustomReticle: {fileID: 0}
-  m_FirstHoverEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_LastHoverExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_HoverEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_HoverExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_FirstSelectEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_LastSelectExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_SelectEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_SelectExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_Activated:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_Deactivated:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_RegisteredInteractionManager: {fileID: 0}
-  m_OnFirstHoverEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnLastHoverExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnHoverEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnHoverExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnSelectEntered:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnSelectExited:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnSelectCanceled:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnActivate:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_OnDeactivate:
-    m_PersistentCalls:
-      m_Calls: []
-    m_CallsDirty: 1
-  m_AttachTransform: {fileID: 0}
-  m_AttachEaseInTime: 0.15
-  m_MovementType: 2
-  m_VelocityDamping: 1
-  m_VelocityScale: 1
-  m_AngularVelocityDamping: 1
-  m_AngularVelocityScale: 1
-  m_TrackPosition: 1
-  m_SmoothPosition: 0
-  m_SmoothPositionAmount: 5
-  m_TightenPosition: 0.5
-  m_TrackRotation: 1
-  m_SmoothRotation: 0
-  m_SmoothRotationAmount: 5
-  m_TightenRotation: 0.5
-  m_ThrowOnDetach: 1
-  m_ThrowSmoothingDuration: 0.25
-  m_ThrowSmoothingCurve:
-    m_Curve:
-    - time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  m_ThrowVelocityScale: 1.5
-  m_ThrowAngularVelocityScale: 1
-  m_ForceGravityOnDetach: 0
-  m_RetainTransformParent: 1
-  m_AttachPointCompatibilityMode: 0
-  m_InteractorLocalPosition: {x: 0, y: 0, z: 0}
-  m_InteractorLocalRotation: {x: 0, y: 0, z: 0, w: 0}
-  m_TargetWorldPosition: {x: 0, y: 0, z: 0}
-  m_TargetWorldRotation: {x: 0, y: 0, z: 0, w: 0}
-  m_CurrentAttachEaseTime: 0
-  m_CurrentMovementType: 0
-  m_DetachInLateUpdate: 0
-  m_DetachVelocity: {x: 0, y: 0, z: 0}
-  m_DetachAngularVelocity: {x: 0, y: 0, z: 0}
-  m_ThrowSmoothingCurrentFrame: 0
-  m_Rigidbody: {fileID: 0}
-  m_LastPosition: {x: 0, y: 0, z: 0}
-  m_LastRotation: {x: 0, y: 0, z: 0, w: 0}
-  m_WasKinematic: 0
-  m_UsedGravity: 0
-  m_OldDrag: 0
-  m_OldAngularDrag: 0
-  m_OriginalSceneParent: {fileID: 0}
-  m_TeleportationProvider: {fileID: 0}
-  m_PoseBeforeTeleport:
-    position: {x: 0, y: 0, z: 0}
-    rotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &1079036696
 GameObject:
   m_ObjectHideFlags: 0
@@ -5326,7 +5183,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1648218228}
-  m_LocalRotation: {x: 0, y: 0.2997069, z: 0, w: 0.9540314}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 71, z: -118}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -5337,7 +5194,7 @@ Transform:
   - {fileID: 1171797809}
   m_Father: {fileID: 0}
   m_RootOrder: 10
-  m_LocalEulerAnglesHint: {x: 0, y: 34.88, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1648218233
 MonoBehaviour:
   m_ObjectHideFlags: 0
