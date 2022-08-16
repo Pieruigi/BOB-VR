@@ -580,7 +580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &135009650
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4086,7 +4086,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1235417907
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4513,7 +4513,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1428604105
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5097,7 +5097,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   drag: 0.035
   directionChangeSpeed: 0.2
-  rotationSpeed: 120
+  rotationSpeed: 90
   friction: {x: 1.5, y: 0, z: 0}
   brakeForceMax: 0.5
   brakeLength: 0.5
@@ -5208,7 +5208,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1770358251
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5532,7 +5532,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1957734028
 MeshCollider:
   m_ObjectHideFlags: 0
